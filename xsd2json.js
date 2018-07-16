@@ -78,7 +78,7 @@ function mandate(target,inAnyOf,inAllOf,name) {
 function finaliseType(typeData) {
 	if ((typeData.type == 'string') || (typeData.type == 'boolean') || (typeData.type == 'array') || (typeData.type == 'object')
 		|| (typeData.type == 'integer') || (typeData.type == 'number') || (typeData.type == 'null')) {
-		//typeData.type = typeData.type;
+		typeData.type = typeData.type;
 	}
 	else {
 		if (typeData.type.startsWith('xml:')) { // id, lang, space, base, Father
@@ -291,7 +291,11 @@ function doElement(src,parent,key) {
 	}
 
 	if (element[xsPrefix+"annotation"]) {
-		doc = element[xsPrefix+"annotation"][xsPrefix+"documentation"];
+		if (element[xsPrefix+"annotation"][xsPrefix+"documentation"] instanceof Array && element[xsPrefix+"annotation"][xsPrefix+"documentation"][0]['#text']) {
+            doc = element[xsPrefix+"annotation"][xsPrefix+"documentation"][0]['#text'];
+		} else {
+            doc = element[xsPrefix+"annotation"][xsPrefix+"documentation"];
+		}
 	}
 
 	if (element["@name"]) {
@@ -348,10 +352,9 @@ function doElement(src,parent,key) {
 		name = element["@ref"];
 		type = element["@ref"];
 	}
-
 	if (name && type) {
 		var isAttribute = (element["@isAttr"] == true);
-
+        if (name && name.startsWith('Ex')) console.log(element, type);
 		initTarget(parent);
 		var newTarget = target;
 
@@ -366,6 +369,7 @@ function doElement(src,parent,key) {
 		if (element["@isChoice"]) minOccurs = 0;
 
 		var typeData = mapType(type);
+        if (name && name.startsWith('Ex')) console.log(typeData);
 		if (isAttribute && (typeData.type == 'object')) {
 			typeData.type = 'string'; // handle case where attribute has no defined type
 		}
@@ -380,9 +384,11 @@ function doElement(src,parent,key) {
 			typeData.additionalProperties = false;
 			newTarget = typeData;
 		}
-
+        if (name && name.startsWith('Ex')) console.log(typeData);
+        if (name && name.startsWith('Ex')) console.log(element);
 		// handle @ref / attributeGroups
 		if ((key == xsPrefix+"attributeGroup") && (element["@ref"])) { // || (name == '$ref')) {
+            if (name && name.startsWith('Ex')) console.log('test');
 			if (!target.anyOf) target.anyOf = [];
 			var newt = {};
 			newt.properties = {};
@@ -395,12 +401,20 @@ function doElement(src,parent,key) {
 		}
 
 		if ((parent[xsPrefix+"annotation"]) && ((parent[xsPrefix+"annotation"][xsPrefix+"documentation"]))) {
-			target.description = parent[xsPrefix+"annotation"][xsPrefix+"documentation"];
+			if (parent[xsPrefix+"annotation"][xsPrefix+"documentation"] instanceof Array && parent[xsPrefix+"annotation"][xsPrefix+"documentation"][0]['#text']) {
+                target.description = parent[xsPrefix + "annotation"][xsPrefix + "documentation"][0]['#text'];
+			} else {
+                target.description = parent[xsPrefix + "annotation"][xsPrefix + "documentation"];
+            }
 		}
 		if ((element[xsPrefix+"annotation"]) && ((element[xsPrefix+"annotation"][xsPrefix+"documentation"]))) {
-			target.description = (target.description ? target.decription + '\n' : '') + element[xsPrefix+"annotation"][xsPrefix+"documentation"];
+			if (element[xsPrefix+"annotation"][xsPrefix+"documentation"] instanceof Array && element[xsPrefix+"annotation"][xsPrefix+"documentation"][0]['#text']) {
+                target.description = (target.description ? target.description + '\n' : '') + element[xsPrefix + "annotation"][xsPrefix + "documentation"][0]['#text'];
+            } else {
+                target.description = (target.description ? target.description + '\n' : '') + element[xsPrefix + "annotation"][xsPrefix + "documentation"];
+			}
 		}
-
+        if (name && name.startsWith('Ex')) console.log(element);
 		var enumSource;
 
 		if (element[xsPrefix+"simpleType"] && element[xsPrefix+"simpleType"][xsPrefix+"restriction"] && element[xsPrefix+"simpleType"][xsPrefix+"restriction"][xsPrefix+"enumeration"]) {
@@ -411,6 +425,7 @@ function doElement(src,parent,key) {
 		}
 
 		if (enumSource) {
+            if (name && name.startsWith('Ex')) console.log('enum', enumSource);
 			typeData.description = '';
 			typeData["enum"] = [];
 			for (var i=0;i<enumSource.length;i++) {
@@ -428,8 +443,9 @@ function doElement(src,parent,key) {
 		else {
 			typeData = finaliseType(typeData);
 		}
-
+        if (name && name.startsWith('Ex')) console.log('fin', typeData);
 		if (maxOccurs > 1) {
+            if (name && name.startsWith('Ex')) console.log('parent', parent);
 			var newTD = {};
 			newTD.type = 'array';
 			if (minOccurs > 0) newTD.minItems = parseInt(minOccurs,10);
@@ -438,6 +454,7 @@ function doElement(src,parent,key) {
 			typeData = newTD;
 			// TODO add mode where if array minOccurs is 1, add oneOf allowing single object or array with object as item
 		}
+        if (name && name.startsWith('Ex')) console.log('fin', typeData);
 		if (minOccurs > 0) {
 			mandate(target,inAnyOf,inAllOf,name);
 		}
@@ -447,7 +464,7 @@ function doElement(src,parent,key) {
 			if (simpleType[xsPrefix+"maxLength"]) typeData.maxLength = parseInt(simpleType[xsPrefix+"maxLength"]["@value"],10);
 			if (simpleType[xsPrefix+"pattern"]) typeData.pattern = simpleType[xsPrefix+"pattern"]["@value"];
 			if ((simpleType[xsPrefix+"annotation"]) && (simpleType[xsPrefix+"annotation"][xsPrefix+"documentation"])) {
-				typeData.description = simpleType[xsPrefix+"annotation"][xsPrefix+"documentation"];
+				typeData.description = '450' + simpleType[xsPrefix+"annotation"][xsPrefix+"documentation"];
 			}
 		}
 
@@ -679,10 +696,10 @@ module.exports = {
 			for (var a in src[xsPrefix+"schema"][xsPrefix+"annotation"]) {
 				var annotation = src[xsPrefix+"schema"][xsPrefix+"annotation"][a];
 				if ((annotation[xsPrefix+"documentation"]) && (annotation[xsPrefix+"documentation"]["#text"])) {
-					obj.description += (obj.description ? '\n' : '') + annotation[xsPrefix+"documentation"]["#text"];
+					obj.description += '682' + (obj.description ? '\n' : '') + annotation[xsPrefix+"documentation"]["#text"];
 				}
 				else {
-					if (annotation[xsPrefix+"documentation"]) obj.description += (obj.description ? '\n' : '') + annotation[xsPrefix+"documentation"];
+					if (annotation[xsPrefix+"documentation"]) obj.description += '685' + (obj.description ? '\n' : '') + annotation[xsPrefix+"documentation"];
 				}
 			}
 		}

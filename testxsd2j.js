@@ -20,8 +20,8 @@ catch (err) {
 	process.exit(1);
 }
 
-console.log(JSON.stringify(obj,null,2));
-
+// console.log(JSON.stringify(obj,null,2));
+fs.writeFileSync('inter.json',JSON.stringify(obj,null,2),'utf8');
 var laxUris = (filename.indexOf('.lax')>=0);
 var json = xsd.getJsonSchema(obj,filename,'',laxUris,'xs:');
 console.log();
